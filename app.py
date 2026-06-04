@@ -64,25 +64,22 @@ else:
 try:
     print("[*] Initializing base pretrained YOLOv8s models...")
     base_model = YOLO("yolov8s.pt")
-    base_track = YOLO("yolov8s.pt")
-    print("[*] Base YOLOv8s models initialized successfully.")
+    # Removed separate base_track to save memory
+    print("[*] Base YOLOv8s model initialized successfully.")
 except Exception as e:
     print(f"[!] Critical error loading base YOLOv8s models: {e}")
     base_model = YOLO("yolov8s.pt")
-    base_track = YOLO("yolov8s.pt")
 
 custom_model = None
-custom_track = None
 if is_custom_loaded:
     try:
-        print(f"[*] Initializing custom YOLOv8 models from: {custom_model_path}")
+        print(f"[*] Initializing custom YOLOv8 model from: {custom_model_path}")
         custom_model = YOLO(custom_model_path)
-        custom_track = YOLO(custom_model_path)
-        print(f"[*] Custom YOLOv8 models initialized successfully.")
+        # Removed separate custom_track to save memory
+        print(f"[*] Custom YOLOv8 model initialized successfully.")
     except Exception as e:
         print(f"[!] Error loading custom YOLOv8 models: {e}")
         custom_model = None
-        custom_track = None
         is_custom_loaded = False
 
 # Helper: calculate intersection over union (IoU) to suppress duplicate boxes
@@ -422,10 +419,10 @@ def detect_video():
 
         # Reset tracker state to prevent size mismatch errors between different video uploads
         with model_lock:
-            if hasattr(base_track, 'predictor') and base_track.predictor is not None:
-                base_track.predictor.trackers = None
-            if custom_track is not None and hasattr(custom_track, 'predictor') and custom_track.predictor is not None:
-                custom_track.predictor.trackers = None
+            if hasattr(base_model, 'predictor') and base_model.predictor is not None:
+                base_model.predictor.trackers = None
+            if custom_model is not None and hasattr(custom_model, 'predictor') and custom_model.predictor is not None:
+                custom_model.predictor.trackers = None
 
         import cv2
         cap = cv2.VideoCapture(temp_vid_path)
@@ -461,9 +458,9 @@ def detect_video():
                 
             with model_lock:
                 if use_custom:
-                    results = custom_track.track(frame, persist=True, conf=0.25, iou=0.30, agnostic_nms=True, verbose=False)
+                    results = custom_model.track(frame, persist=True, conf=0.25, iou=0.30, agnostic_nms=True, verbose=False)
                 else:
-                    results = base_track.track(frame, persist=True, conf=0.25, iou=0.30, verbose=False)
+                    results = base_model.track(frame, persist=True, conf=0.25, iou=0.30, verbose=False)
             
             current_frame_vehicles = 0
             current_frame_classes = {}
